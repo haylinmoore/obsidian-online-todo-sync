@@ -67,17 +67,15 @@ export default class GradescopePlugin extends Plugin {
 				return todo;
 			});
 
-		if (newTodos.length === 0) {
-			throw new Error("No new to-dos found.");
-		}
-
 		const combinedTodos = Todos.sortByDueDate([
 			...currentTodos,
 			...newTodos,
 		]);
 
-		new Notice(`${course.name}: added ${newTodos.length} new to-dos.`);
-		return lines[0] + "\n" + combinedTodos.map(Todos.todoToString).join("\n");
+		if (newTodos.length != 0) {
+			new Notice(`${course.name}: added ${newTodos.length} new to-dos.`);
+		}
+		return `${course.toString()}\n${new Date().toString()}\n` + combinedTodos.map(Todos.todoToString).join("\n");
 	}
 
 	async processImportTaskFiles(app: App): Promise<void> {
@@ -94,9 +92,6 @@ export default class GradescopePlugin extends Plugin {
 				await this.updateTodos(content.split("\n")).then((newContent)=>{
 					app.vault.modify(taskFile, newContent);
 				}, (error: Error) => {
-					if (error.message === "No new to-dos found.") {
-						return;
-					}
 					console.error("Error updating todos:", error);
 					new Notice(`${error}`);
 				});

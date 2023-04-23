@@ -2,6 +2,7 @@ export type Course = {
 	name: string;
 	id: string;
 	filters: string[];
+    toString: () => string;
 };
 
 export const extract = (s: string): Course => {
@@ -24,5 +25,9 @@ export const extract = (s: string): Course => {
 		name,
 		id,
 		filters,
+        toString: function() {
+            return `GSImport;${this.name};${this.id};${JSON.stringify(this.filters)};`
+        }
+
 	};
 };
