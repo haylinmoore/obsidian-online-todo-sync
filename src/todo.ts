@@ -53,6 +53,6 @@ export const sortByDueDate = (todos: Todo[]): Todo[] => {
 		}
 
 		// Compare the due dates as strings
-		return a.due.localeCompare(b.due);
+		return a.due.localeCompare(b.due) * -1;
 	});
 };

@@ -7,22 +7,28 @@ import {
 	Setting
 } from "obsidian";
 
+import * as Utils from "./utils";
 import * as Todos from "./todo";
-import * as Gradescope from "./gradescope";
 import * as Course from "./course";
+import * as Sources from "./sources";
 
-interface GradescopeSettings {
-	token: string;
+interface PluginSettings {
+	[key: string]: {
+		[settingKey: string]: string;
+	};
 }
+  
+const DEFAULT_SETTINGS: PluginSettings = Sources.DefaultSettings;
 
-const DEFAULT_SETTINGS: GradescopeSettings = {
-	token: 'non-token'
-}
-
-export default class GradescopePlugin extends Plugin {
-	settings: GradescopeSettings;
+export default class OnlineTodoSync extends Plugin {
+	settings: PluginSettings;
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loadedData = await this.loadData();
+		this.settings = Utils.deepCopy(DEFAULT_SETTINGS);
+		
+		if (loadedData) {
+			this.settings = Utils.deepMerge(this.settings, loadedData);
+		}
 	}
 
 	async saveSettings() {
@@ -34,7 +40,7 @@ export default class GradescopePlugin extends Plugin {
 
 		this.addRibbonIcon(
 			"refresh-cw",
-			"Sync Gradescope",
+			"Sync Todos",
 			(evt: MouseEvent) => {
 				this.processImportTaskFiles(this.app);
 			}
@@ -49,7 +55,11 @@ export default class GradescopePlugin extends Plugin {
 		const currentTodos = lines.filter((line) => line.match(/^\s*-\s*\[.?\]\s*.+/)).map(Todos.stringToTodo)
 
 		const currentTitles = currentTodos.map((todo) => todo.name);
-		const newTodos = (await Gradescope.fetchTodos(course.id, this.settings.token))
+		if (!Sources.Sources.hasOwnProperty(course.source)) {
+			throw new Error(`Unknown source: ${course.source}`);
+		}
+
+		const newTodos = (await Sources.Sources[course.source].fetchTodos(course.id, this.settings[course.source]))
 			.filter(
 				(todo) =>
 					!currentTitles.some((title) => title.contains(todo.name))
@@ -88,7 +98,7 @@ export default class GradescopePlugin extends Plugin {
 			const content = await app.vault.read(taskFile);
 			const firstLine = content.split("\n")[0];
 
-			if (firstLine.startsWith("GSImport")) {
+			if (firstLine.startsWith("Import")) {
 				await this.updateTodos(content.split("\n")).then((newContent)=>{
 					app.vault.modify(taskFile, newContent);
 				}, (error: Error) => {
@@ -100,14 +110,16 @@ export default class GradescopePlugin extends Plugin {
 
 		const processingTasks = tasksFiles.map(processFile);
 		await Promise.all(processingTasks);
-		new Notice("Sync from gradescope complete.");
+
+		// Add message about any failures
+		new Notice("Sync from online sources complete.");
 	}
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: GradescopePlugin;
+	plugin: OnlineTodoSync;
 
-	constructor(app: App, plugin: GradescopePlugin) {
+	constructor(app: App, plugin: OnlineTodoSync) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -117,16 +129,21 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h1', {text: 'Settings for Online Todo Sync'});
 
-		new Setting(containerEl)
-			.setName('Gradescope Token')
-			.addText(text => text
-				.setPlaceholder('Enter your token')
-				.setValue(this.plugin.settings.token)
-				.onChange(async (value) => {
-					this.plugin.settings.token = value;
-					await this.plugin.saveSettings();
-				}));
+		for (const [sourceKey, settings] of Object.entries(Sources.AllSettings)) {
+			containerEl.createEl('h2', {text: `Settings for ${sourceKey}`});
+			for (const [key, setting] of Object.entries(settings)) {
+				new Setting(containerEl)
+					.setName(setting.name)
+					.addText(text => text
+						.setPlaceholder(setting.placeholder)
+						.setValue(this.plugin.settings[sourceKey][key])
+						.onChange(async (value) => {
+							this.plugin.settings[sourceKey][key] = value;
+							await this.plugin.saveSettings();
+						}));
+			}
+		}
 	}
 }

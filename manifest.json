@@ -1,11 +1,10 @@
 {
-	"id": "my-gradescope-plugin",
-	"name": "Gradescope To-Do Sync",
-	"version": "0.1.0",
-	"author": "Hampton Moore",
-	"description": "A plugin to sync Gradescope to-dos with Obsidian",
-	"minAppVersion": "0.9.20",
+	"id": "online-todo-sync",
+	"name": "Online To-Do Sync",
+	"version": "1.0.0",
+	"author": "Haylin Moore",
+	"description": "A plugin to pull online todos into Obsidian",
+	"minAppVersion": "0.15.0",
 	"isDesktopOnly": false,
 	"main": "main.ts"
-  }
-  
+}

@@ -1,26 +1,30 @@
-# Gradescope Todo Sync for Obsidian
+# Online Todo Sync for Obsidian
 
-This plugin syncs your todo tasks from Gradescope with an Obsidian using Obsidian Tasks format. 
-It searches for files named "Tasks" containing tasks in a specific format and updates them with tasks fetched from Gradescope.
+This plugin syncs your todo tasks from various online sources with an Obsidian using Obsidian Tasks format. 
+It searches for files named "Tasks" containing tasks in a specific format and updates them with tasks fetched from online.
+
+Supports the following sources:
+- Gradescope
+- Canvas (inspired by https://github.com/jordaeday/canvas-task-importer)
 
 ## Features
 
-- Find all "Tasks" files in your vault with the first line starting with "GSImport"
+- Find all "Tasks" files in your vault with the first line starting with "Import"
 - Extract todo items from the current document
 
-## GSImport Format
+## Import Format
 
-The "Tasks" files in your Obsidian vault should follow the GSImport format. 
-The first line of the file should start with "GSImport" and be formatted as follows:
+The "Tasks" files in your Obsidian vault should follow the Import format. 
+The first line of the file should start with "Import" and be formatted as follows:
 
 ```
-GSImport;CLASSPREFIX;CLASSID;["ignore assignments containing me"];
+Import;SOURCE;CLASSPREFIX;CLASSID;["ignore assignments containing me"];
 ```
 
 For example:
 
 ```
-GSImport;CS220;507946;["No Credit"];
+Import;gradesope;CS220;507946;["No Credit"];
 ```
 
 ## Development

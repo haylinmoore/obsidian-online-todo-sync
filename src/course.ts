@@ -1,4 +1,5 @@
 export type Course = {
+	source: string;
 	name: string;
 	id: string;
 	filters: string[];
@@ -7,26 +8,28 @@ export type Course = {
 
 export const extract = (s: string): Course => {
 	const parts = s.split(";");
-	if (parts.length < 4) {
+	if (parts.length < 5) {
 		throw new Error("Invalid input string for course extraction.");
 	}
 
-	const name = parts[1];
-	const id = parts[2];
+	const source = parts[1];
+	const name = parts[2];
+	const id = parts[3];
 
 	let filters: string[] = [];
 	try {
-		filters = JSON.parse(parts[3]);
+		filters = JSON.parse(parts[4]);
 	} catch (error) {
 		console.error("Error parsing filters array:", error);
 	}
 
 	return {
 		name,
+		source,
 		id,
 		filters,
         toString: function() {
-            return `GSImport;${this.name};${this.id};${JSON.stringify(this.filters)};`
+            return `Import;${this.source};${this.name};${this.id};${JSON.stringify(this.filters)};`
         }
 
 	};
